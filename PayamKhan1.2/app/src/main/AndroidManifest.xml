@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ir.payamkhan"
+    android:versionCode="3"
+    android:versionName="1.2">
+
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- دستیار شناور: نمایش حباب روی همهٔ برنامه‌ها -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- سرویس پس‌زمینهٔ پایدار برای حباب شناور و پخش صدا -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- اعلان دائمی «دستیار فعال است» (اندروید ۱۳ به بالا) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- ادامهٔ کار حباب بعد از روشن شدن گوشی -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- جلوگیری از قطع صدا هنگام خواندن پیام‌های بلند -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- فقط برای راهنمایی کاربر به صفحهٔ بهینه‌سازی باتری (با تأیید خود کاربر) -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|screenSize|keyboardHidden">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- دریافت متن از طریق دکمه Share در واتساپ، تلگرام، پیامک و ... -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <!-- خواندن متن انتخاب‌شده در هر برنامه‌ای -->
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- دستیار شناور: حباب روی همهٔ برنامه‌ها + خواندن پیام کپی‌شده -->
+        <service
+            android:name=".FloatingService"
+            android:exported="false"
+            android:enabled="true"
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="floating_speaker_bubble_overlay_with_text_to_speech" />
+        </service>
+
+        <!-- پنجرهٔ کاملاً شفاف و آنی؛ فقط برای گرفتن متن کپی‌شده در اندروید ۱۰ به بالا.
+             هیچ متنی نمایش نمی‌دهد و بلافاصله بسته می‌شود. -->
+        <activity
+            android:name=".ClipboardGrabActivity"
+            android:exported="false"
+            android:theme="@style/TransparentGrabTheme"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:launchMode="singleInstance"
+            android:stateNotNeeded="true"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
+        <!-- دستیار هوشمند (اختیاری): گرفتن متن کپی/انتخاب‌شده از خود برنامهٔ مقصد.
+             فقط با فعال‌سازی آگاهانهٔ کاربر در تنظیمات دسترس‌پذیری اندروید کار می‌کند. -->
+        <service
+            android:name=".CopyCatcherService"
+            android:exported="true"
+            android:label="@string/a11y_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/a11y_config" />
+        </service>
+
+        <!-- اگر کاربر «دستیار شناور» را روشن گذاشته باشد، بعد از روشن شدن گوشی دوباره فعال می‌شود -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
